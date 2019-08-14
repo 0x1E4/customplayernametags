@@ -9,15 +9,17 @@
 #include <YSI\y_hooks>
  
 #define NT_DISTANCE 25.0 // Nametag render distance
+#define SHOW_HEALTH 1
  
 new Text3D:cNametag[MAX_PLAYERS];
+new cNametagType = 1;
  
 hook OnGameModeInit()
 {
     ShowNameTags(0);
     print("--- Custom nametags by Nyzenic loaded. Edited by Bork ---");
     // OnPlayerUpdate causes lag and OnPlayer(Take/Give)Damage doesn't work with it
-    SetTimer("UpdateNametag", 1000, true); // So we're using a timer, change the interval to what you want
+    SetTimer("UpdateNametag", 900, true); // So we're using a timer, change the interval to what you want
     return 1;
 }
 
@@ -97,6 +99,7 @@ hook OnPlayerDisconnect(playerid, reason)
 {
     if(IsValidDynamic3DTextLabel(cNametag[playerid]))
               DestroyDynamic3DTextLabel(cNametag[playerid]);
+              
     return 1;
 }
 
@@ -107,18 +110,21 @@ public UpdateNametag()
     {
         if(IsPlayerConnected(i))
         {
-            new nametag[128], playername[MAX_PLAYER_NAME], Float:armour;
-            GetPlayerArmour(i, armour);
+            new nametag[128], playername[MAX_PLAYER_NAME];
             GetPlayerName(i, playername, sizeof(playername));
-            if(armour > 1.0)
-            {
-                format(nametag, sizeof(nametag), "{%06x}%s {FFFFFF}(%i)\n{FFFFFF}%s\n{FF0000}%s", GetPlayerColor(i) >>> 8, playername, i, GetArmorDots(i), GetHealthDots(i));
-            }
-            else
-            {
-                format(nametag, sizeof(nametag), "{%06x}%s {FFFFFF}(%i)\n{FF0000}%s", GetPlayerColor(i) >>> 8, playername, i, GetHealthDots(i));
-            }
-            UpdateDynamic3DTextLabelText(cNametag[i], 0xFFFFFFFF, nametag);
+
+            #if SHOW_HEALTH == 1
+                new Float:armour;
+
+                GetPlayerArmour(i, armour);
+                if(armour > 1.0)
+                    format(nametag, sizeof(nametag), "{%06x}%s {FFFFFF}(%i)\n{FFFFFF}%s\n{FF0000}%s", GetPlayerColor(i) >>> 8, playername, i, GetArmorDots(i), GetHealthDots(i));
+                else
+                    format(nametag, sizeof(nametag), "{%06x}%s {FFFFFF}(%i)\n{FF0000}%s", GetPlayerColor(i) >>> 8, playername, i, GetHealthDots(i));
+            #else
+                format(nametag, sizeof(nametag), "{%0x6}%s {FFFFFF} (%i)", GetPlayerColor(i) >>> 8, playername);
+           #endif
+           UpdateDynamic3DTextLabelText(cNametag[i], 0xFFFFFFFF, nametag);
         }
     }
 }
